@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/spore-print",
+    "crates/spore-print-derive"
+]
+
+resolver = "2"

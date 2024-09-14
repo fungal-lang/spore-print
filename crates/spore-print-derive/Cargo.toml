@@ -1,0 +1,18 @@
+[package]
+name = "spore-print-derive"
+version = "0.1.0"
+authors = ["Hakim Jonas Ghoula <hakim@walkthisway.dk>"]
+edition = "2021"
+description = "Procedural macro for deriving SporePrint trait."
+license = "GPL-3"
+repository = "https://github.com/fungal-lang/spore-print"
+readme = "../../README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+spore-print = { path = "../spore-print" }  # Depends on spore-print for the SporePrint trait
