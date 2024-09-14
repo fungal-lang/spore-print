@@ -3,7 +3,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, WhereClause};
 
 #[proc_macro_derive(SporePrint)]
 pub fn spore_print_derive(input: TokenStream) -> TokenStream {
@@ -19,48 +19,79 @@ pub fn spore_print_derive(input: TokenStream) -> TokenStream {
 
 fn impl_spore_print(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
+    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     match &input.data {
-        Data::Struct(data_struct) => impl_spore_print_for_struct(name, data_struct),
-        Data::Enum(data_enum) => impl_spore_print_for_enum(name, data_enum),
+        Data::Struct(data_struct) => impl_spore_print_for_struct(
+            name,
+            &impl_generics,
+            &ty_generics,
+            where_clause,
+            data_struct,
+        ),
+        Data::Enum(data_enum) => {
+            impl_spore_print_for_enum(name, &impl_generics, &ty_generics, where_clause, data_enum)
+        }
         _ => unimplemented!("SporePrint can only be derived for structs and enums"),
     }
 }
 
 fn impl_spore_print_for_struct(
     name: &syn::Ident,
+    impl_generics: &syn::ImplGenerics,
+    ty_generics: &syn::TypeGenerics,
+    where_clause: Option<&WhereClause>,
     data_struct: &syn::DataStruct,
 ) -> proc_macro2::TokenStream {
-    let field_names: Vec<syn::Ident> = match &data_struct.fields {
-        Fields::Named(fields_named) => fields_named
-            .named
-            .iter()
-            .map(|f| f.ident.clone().unwrap())
-            .collect(),
-        Fields::Unnamed(fields_unnamed) => (0..fields_unnamed.unnamed.len())
-            .map(|i| syn::Ident::new(&format!("_{}", i), proc_macro2::Span::call_site()))
-            .collect(),
-        Fields::Unit => Vec::new(),
-    };
+    let fields_fmt = match &data_struct.fields {
+        Fields::Named(fields_named) => {
+            let field_names: Vec<syn::Ident> = fields_named
+                .named
+                .iter()
+                .map(|f| f.ident.clone().unwrap())
+                .collect();
+            let field_accessors = field_names
+                .iter()
+                .map(|ident| quote! { self.#ident.spore_print() });
+            let field_strings = field_names.iter().map(|ident| ident.to_string());
 
-    let field_accessors = field_names
-        .iter()
-        .map(|ident| quote! { self.#ident.spore_print() });
-    let field_strings = field_names.iter().map(|ident| ident.to_string());
+            quote! {
+                vec![
+                    #(
+                        format!("{}: {}", #field_strings, #field_accessors)
+                    ),*
+                ].join(", ")
+            }
+        }
+        Fields::Unnamed(fields_unnamed) => {
+            let field_names: Vec<syn::Ident> = (0..fields_unnamed.unnamed.len())
+                .map(|i| syn::Ident::new(&format!("_{}", i), proc_macro2::Span::call_site()))
+                .collect();
+            let field_accessors = field_names
+                .iter()
+                .map(|ident| quote! { self.#ident.spore_print() });
 
-    let fields_fmt = quote! {
-        vec![
-            #(
-                format!("{}: {}", #field_strings, #field_accessors)
-            ),*
-        ].join(", ")
+            quote! {
+                vec![
+                    #(
+                        #field_accessors
+                    ),*
+                ].join(", ")
+            }
+        }
+        Fields::Unit => quote! { String::new() },
     };
 
     quote! {
-        impl spore_print::SporePrint for #name {
+        impl #impl_generics spore_print::SporePrint for #name #ty_generics #where_clause {
             fn spore_print(&self) -> String {
-                let fields = #fields_fmt;
-                format!("{} {{ {} }}", stringify!(#name), fields)
+                if #fields_fmt.is_empty() {
+                    stringify!(#name).to_string()
+                } else {
+                    let fields = #fields_fmt;
+                    format!("{} {{ {} }}", stringify!(#name), fields)
+                }
             }
         }
     }
@@ -68,8 +99,21 @@ fn impl_spore_print_for_struct(
 
 fn impl_spore_print_for_enum(
     name: &syn::Ident,
+    impl_generics: &syn::ImplGenerics,
+    ty_generics: &syn::TypeGenerics,
+    where_clause: Option<&WhereClause>,
     data_enum: &syn::DataEnum,
 ) -> proc_macro2::TokenStream {
+    if data_enum.variants.is_empty() {
+        return quote! {
+            impl #impl_generics spore_print::SporePrint for #name #ty_generics #where_clause {
+                fn spore_print(&self) -> String {
+                    panic!("Cannot print an instance of an empty enum {}", stringify!(#name))
+                }
+            }
+        };
+    }
+
     let variant_matches = data_enum.variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
         let variant_name = variant_ident.to_string();
@@ -140,7 +184,7 @@ fn impl_spore_print_for_enum(
     });
 
     quote! {
-        impl spore_print::SporePrint for #name {
+        impl #impl_generics spore_print::SporePrint for #name #ty_generics #where_clause {
             fn spore_print(&self) -> String {
                 match self {
                     #(#variant_matches),*
