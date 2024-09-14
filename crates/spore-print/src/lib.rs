@@ -103,6 +103,59 @@ where
 
 // Additional implementations for more tuple sizes can be added here as needed
 
+// Helper function to format items
+fn format_items<T: SporePrint>(items: &[T]) -> String {
+    let formatted_items = items
+        .iter()
+        .map(|item| item.spore_print())
+        .collect::<Vec<_>>();
+    format!("[{}]", formatted_items.join(", "))
+}
+
+// Implement SporePrint for slices
+impl<T> SporePrint for &[T]
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        format_items(self)
+    }
+}
+
+// Implement SporePrint for arrays
+impl<T, const N: usize> SporePrint for [T; N]
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        format_items(self)
+    }
+}
+
+// Implement SporePrint for references
+impl<T> SporePrint for &T
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        (*self).spore_print()
+    }
+}
+
+// Implement SporePrint for Result<T, E>
+impl<T, E> SporePrint for Result<T, E>
+where
+    T: SporePrint,
+    E: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        match self {
+            Ok(value) => format!("Ok({})", value.spore_print()),
+            Err(err) => format!("Err({})", err.spore_print()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,5 +244,36 @@ mod tests {
                 .map(|s| s.to_string()),
         );
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_slice() {
+        let slice: &[i32] = &[1, 2, 3];
+        assert_eq!(slice.spore_print(), "[1, 2, 3]");
+    }
+
+    #[test]
+    fn test_array() {
+        let array: [i32; 3] = [1, 2, 3];
+        assert_eq!(array.spore_print(), "[1, 2, 3]");
+    }
+
+    #[test]
+    fn test_reference() {
+        let value = 42;
+        let reference: &i32 = &value;
+        assert_eq!(reference.spore_print(), "42");
+    }
+
+    #[test]
+    fn test_result_ok() {
+        let result: Result<i32, &str> = Ok(42);
+        assert_eq!(result.spore_print(), "Ok(42)");
+    }
+
+    #[test]
+    fn test_result_err() {
+        let result: Result<i32, &str> = Err("error");
+        assert_eq!(result.spore_print(), "Err(error)");
     }
 }

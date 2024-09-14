@@ -33,9 +33,7 @@ fn test_deeply_nested_vec_option() {
 // Test HashMap with SporePrint
 #[test]
 fn test_hashmap_membership() {
-    let mut map = HashMap::new();
-    map.insert("key1", 1);
-    map.insert("key2", 2);
+    let map: HashMap<&str, i32> = [("key1", 1), ("key2", 2)].iter().cloned().collect();
 
     // Convert the output of spore_print to a set for membership comparison
     let expected: HashSet<String> =

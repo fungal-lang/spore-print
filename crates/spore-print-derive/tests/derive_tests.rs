@@ -97,3 +97,96 @@ fn test_empty_struct() {
     let instance = EmptyStruct;
     assert_eq!(instance.spore_print(), "EmptyStruct");
 }
+
+#[test]
+fn test_enum_constructions() {
+    // UnitEnum usage
+    let _ = UnitEnum::VariantA;
+    let _ = UnitEnum::VariantB;
+
+    // NamedEnum usage
+    let _ = NamedEnum::VariantX {
+        id: 1,
+        name: "Test".to_string(),
+    };
+    let _ = NamedEnum::VariantY { value: 3.14 };
+
+    // UnnamedEnum usage
+    let _ = UnnamedEnum::Variant1(42, "Hello".to_string());
+    let _ = UnnamedEnum::Variant2(2.71, true);
+}
+
+// Struct with slices
+#[derive(SporePrint)]
+struct SliceStruct<'a> {
+    slice_field: &'a [i32],
+}
+
+#[test]
+fn test_slice_struct() {
+    let test_struct = SliceStruct {
+        slice_field: &[1, 2, 3],
+    };
+    assert_eq!(
+        test_struct.spore_print(),
+        "SliceStruct { slice_field: [1, 2, 3] }"
+    );
+}
+
+// Struct with arrays
+#[derive(SporePrint)]
+struct ArrayStruct {
+    array_field: [i32; 3],
+}
+
+#[test]
+fn test_array_struct() {
+    let test_struct = ArrayStruct {
+        array_field: [1, 2, 3],
+    };
+    assert_eq!(
+        test_struct.spore_print(),
+        "ArrayStruct { array_field: [1, 2, 3] }"
+    );
+}
+
+// Struct with references
+#[derive(SporePrint)]
+struct ReferenceStruct<'a> {
+    ref_field: &'a i32,
+}
+
+#[test]
+fn test_reference_struct() {
+    let value = 42;
+    let test_struct = ReferenceStruct { ref_field: &value };
+    assert_eq!(
+        test_struct.spore_print(),
+        "ReferenceStruct { ref_field: 42 }"
+    );
+}
+
+// Struct with Result<T, E>
+#[derive(SporePrint)]
+struct ResultStruct {
+    result_field: Result<i32, &'static str>,
+}
+
+#[test]
+fn test_result_struct() {
+    let test_struct_ok = ResultStruct {
+        result_field: Ok(42),
+    };
+    assert_eq!(
+        test_struct_ok.spore_print(),
+        "ResultStruct { result_field: Ok(42) }"
+    );
+
+    let test_struct_err = ResultStruct {
+        result_field: Err("error"),
+    };
+    assert_eq!(
+        test_struct_err.spore_print(),
+        "ResultStruct { result_field: Err(error) }"
+    );
+}
