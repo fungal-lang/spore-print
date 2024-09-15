@@ -332,11 +332,17 @@ mod tests {
         let tuple_2 = (42, "hello");
         assert_eq!(tuple_2.spore_print(), "(42, hello)");
 
-        let tuple_3 = (42, "hello", Some(3.14));
-        assert_eq!(tuple_3.spore_print(), "(42, hello, Some(3.14))");
+        let tuple_3 = (42, "hello", Some(std::f64::consts::PI));
+        assert_eq!(
+            tuple_3.spore_print(),
+            "(42, hello, Some(3.141592653589793))"
+        );
 
-        let tuple_4 = (42, "hello", 3.14, true);
-        assert_eq!(tuple_4.spore_print(), "(42, hello, 3.14, true)");
+        let tuple_4 = (42, "hello", std::f64::consts::PI, true);
+        assert_eq!(
+            tuple_4.spore_print(),
+            "(42, hello, 3.141592653589793, true)"
+        );
 
         let tuple_nested = ((1, 2), ("a", "b"));
         assert_eq!(tuple_nested.spore_print(), "((1, 2), (a, b))");
