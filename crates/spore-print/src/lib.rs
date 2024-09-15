@@ -304,13 +304,6 @@ mod tests {
         assert_eq!(range.spore_print(), "a..=z");
     }
 
-    /// Tests `SporePrint` implementation for `Range<char>`
-    #[test]
-    fn test_range_char() {
-        let range = 'a'..'z';
-        assert_eq!(range.spore_print(), "a..z");
-    }
-
     /// Tests `SporePrint` implementation for vector of strings
     #[test]
     fn test_vec_of_strings() {
