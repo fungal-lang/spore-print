@@ -1,3 +1,8 @@
+<div style="display: flex; align-items: center;">
+  <img src="assets/sporeprint-logo.svg" alt="logo" width="64" height="64" style="margin-right: 12px;margin-top: 32px;">
+  <h1>SporePrint</h1>
+</div>
+
 # SporePrint
 
 **SporePrint** is a Rust library providing a `SporePrint` trait and a procedural macro to derive it for custom types.
