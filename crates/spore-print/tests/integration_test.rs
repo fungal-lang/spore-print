@@ -73,8 +73,8 @@ fn test_range_string() {
 /// Tests tuple with `SporePrint` to ensure the `spore_print` method correctly represents the tuple.
 #[test]
 fn test_tuple() {
-    let tuple = (42, "hello", Some(3.14));
-    assert_eq!(tuple.spore_print(), "(42, hello, Some(3.14))");
+    let tuple = (42, "hello", Some(std::f64::consts::PI));
+    assert_eq!(tuple.spore_print(), "(42, hello, Some(3.141592653589793))");
 }
 
 /// Tests vector of strings with `SporePrint` to ensure the `spore_print` method correctly represents the vector.

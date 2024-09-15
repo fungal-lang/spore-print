@@ -16,12 +16,12 @@ struct PrimitiveStruct {
 fn test_primitive_struct() {
     let test_struct = PrimitiveStruct {
         int_field: 42,
-        float_field: 3.14,
+        float_field: std::f64::consts::PI,
         bool_field: true,
     };
     assert_eq!(
         test_struct.spore_print(),
-        "PrimitiveStruct { int_field: 42, float_field: 3.14, bool_field: true }"
+        "PrimitiveStruct { int_field: 42, float_field: 3.141592653589793, bool_field: true }"
     );
 }
 
@@ -118,7 +118,9 @@ fn test_enum_constructions() {
         id: 1,
         name: "Test".to_string(),
     };
-    let _ = NamedEnum::VariantY { value: 3.14 };
+    let _ = NamedEnum::VariantY {
+        value: std::f64::consts::PI,
+    };
 
     // UnnamedEnum usage
     let _ = UnnamedEnum::Variant1(42, "Hello".to_string());
@@ -270,11 +272,11 @@ struct TupleStruct {
 #[test]
 fn test_tuple_struct() {
     let test_struct = TupleStruct {
-        tuple_field: (42, "hello", Some(3.14)),
+        tuple_field: (42, "hello", Some(std::f64::consts::PI)),
     };
     assert_eq!(
         test_struct.spore_print(),
-        "TupleStruct { tuple_field: (42, hello, Some(3.14)) }"
+        "TupleStruct { tuple_field: (42, hello, Some(3.141592653589793)) }"
     );
 }
 

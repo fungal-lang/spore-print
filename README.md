@@ -3,7 +3,6 @@
   <h1>SporePrint</h1>
 </div>
 
-# SporePrint
 
 **SporePrint** is a Rust library providing a `SporePrint` trait and a procedural macro to derive it for custom types.
 
