@@ -1,10 +1,15 @@
 // crates/spore-print-derive/src/lib.rs
+
+//! This crate provides a procedural macro to derive the `SporePrint` trait,
+//! which allows for custom string representations of structs and enums.
+
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields, WhereClause};
 
+/// Derives the `SporePrint` trait for a struct or enum.
 #[proc_macro_derive(SporePrint)]
 pub fn spore_print_derive(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
@@ -17,6 +22,7 @@ pub fn spore_print_derive(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+/// Generates the implementation of the `SporePrint` trait for the given input.
 fn impl_spore_print(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let generics = &input.generics;
@@ -37,6 +43,7 @@ fn impl_spore_print(input: &DeriveInput) -> proc_macro2::TokenStream {
     }
 }
 
+/// Generates the `SporePrint` implementation for a struct.
 fn impl_spore_print_for_struct(
     name: &syn::Ident,
     impl_generics: &syn::ImplGenerics,
@@ -97,6 +104,7 @@ fn impl_spore_print_for_struct(
     }
 }
 
+/// Generates the `SporePrint` implementation for an enum.
 fn impl_spore_print_for_enum(
     name: &syn::Ident,
     impl_generics: &syn::ImplGenerics,

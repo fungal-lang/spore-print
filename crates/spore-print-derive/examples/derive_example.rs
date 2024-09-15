@@ -1,8 +1,7 @@
 use spore_print::SporePrint;
-// Import the trait
 use spore_print_derive::SporePrint;
-// Import the derive macro
 
+/// A struct representing a book with a title and number of pages.
 #[derive(SporePrint)]
 struct Book {
     title: String,
@@ -11,8 +10,8 @@ struct Book {
 
 fn main() {
     let book = Book {
-        title: "The Rust Programming Language".to_string(),
-        pages: 552,
+        title: "Mycelium Running: How Mushrooms Can Help Save the World".to_string(),
+        pages: 356,
     };
     println!("{}", book.spore_print());
 }
