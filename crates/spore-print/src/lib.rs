@@ -246,8 +246,8 @@ mod tests {
     /// Tests `SporePrint` implementation for tuples
     #[test]
     fn test_tuple() {
-        let tuple = (42, "hello", Some(3.14));
-        assert_eq!(tuple.spore_print(), "(42, hello, Some(3.14))");
+        let tuple = (42, "hello", Some(std::f64::consts::PI));
+        assert_eq!(tuple.spore_print(), "(42, hello, Some(3.141592653589793))");
     }
 
     /// Tests `SporePrint` implementation for `HashSet`
