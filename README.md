@@ -3,50 +3,43 @@
   <h1>SporePrint: A Clear, Immutable Representation for Rust Types</h1>
 </div>
 
-## What is SporePrint?
+The SporePrint project consists of two crates:
 
-SporePrint is a Rust library that provides a trait and a procedural macro to derive a consistent, immutable string
-representation for custom types. It’s like the `Display` trait but with a stronger focus on immutability, designed to be
-simple and easy to use.
+1. **spore-print**: A Rust library for generating consistent and immutable string representations of various types.
+2. **spore-print-derive**: A custom derive macro for the `SporePrint` trait from the `spore-print` crate.
 
-## Why SporePrint?
+## Crates
 
-Representing data as strings is essential for debugging, logging, and more. While `Display` offers flexibility,
-SporePrint
-takes it a step further by guaranteeing immutability—because who doesn’t love a string that stays perfectly unchanged?
-It was created to support the Hypha compiler, a project that embraces immutability in its design. With `SporePrint`,
-your types have a clear and stable format, making them easier to understand and work with.
+### spore-print
+
+`spore-print` is a Rust library for generating consistent and immutable string representations of various types.
+
+For more information, see the [spore-print README](crates/spore-print/README.md).
+
+### spore-print-derive
+
+`spore-print-derive` provides a custom derive macro for the `SporePrint` trait from the `spore-print` crate.
+
+For more information, see the [spore-print-derive README](crates/spore-print-derive/README.md).
 
 ## Installation
 
-To use `SporePrint` in your project, add both `spore-print` and `spore-print-derive` to your `Cargo.toml`:
+To use both crates in your project, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spore-print = "0.1.0"
-spore-print-derive = "0.1.0"
-
+spore-print = "0.1.1"
+spore-print-derive = "0.1.1"
 ```
 
-Usage
-Add both spore-print and spore-print-derive to your dependencies:
+## Usage
 
-```rust
-use spore_print::SporePrint;  // Import the SporePrint trait
-use spore_print_derive::SporePrint;  // Import the derive macro
+For detailed usage instructions, see the individual crate-level README.md files:
 
-#[derive(SporePrint)]
-struct MyStruct {
-    field1: String,
-    field2: usize,
-}
+* s[pore-print Usage](crates/spore-print/README.md)
+* [spore-print-derive Usage](crates/spore-print-derive/README.md)
 
-fn main() {
-    let instance = MyStruct { field1: "Hello".to_string(), field2: 42 };
-    println!("{}", instance.spore_print());
-}
-
-```
+## License
 
 This project is licensed under the GPL-3 license.
 

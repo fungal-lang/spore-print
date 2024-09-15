@@ -2,6 +2,46 @@
 
 //! This crate provides a procedural macro to derive the `SporePrint` trait,
 //! which allows for custom string representations of structs and enums.
+//!
+//! # Examples
+//!
+//! ```
+//! use spore_print::SporePrint;
+//! use spore_print_derive::SporePrint;
+//!
+//! #[derive(SporePrint)]
+//! struct MyStruct {
+//!     field1: i32,
+//!     field2: String,
+//! }
+//!
+//! let instance = MyStruct {
+//!     field1: 42,
+//!     field2: "hello".to_string(),
+//! };
+//! assert_eq!(instance.spore_print(), "MyStruct { field1: 42, field2: hello }");
+//! ```
+//!
+//! ```
+//! use spore_print::SporePrint;
+//! use spore_print_derive::SporePrint;
+//!
+//! #[derive(SporePrint)]
+//! enum MyEnum {
+//!     Variant1,
+//!     Variant2(i32),
+//!     Variant3 { field: String },
+//! }
+//!
+//! let instance1 = MyEnum::Variant1;
+//! assert_eq!(instance1.spore_print(), "MyEnum::Variant1");
+//!
+//! let instance2 = MyEnum::Variant2(42);
+//! assert_eq!(instance2.spore_print(), "MyEnum::Variant2(42)");
+//!
+//! let instance3 = MyEnum::Variant3 { field: "hello".to_string() };
+//! assert_eq!(instance3.spore_print(), "MyEnum::Variant3 { field: hello }"); // Regular comment
+//! ```
 
 extern crate proc_macro;
 
@@ -72,12 +112,12 @@ fn impl_spore_print_for_struct(
             }
         }
         Fields::Unnamed(fields_unnamed) => {
-            let field_names: Vec<syn::Ident> = (0..fields_unnamed.unnamed.len())
-                .map(|i| syn::Ident::new(&format!("_{}", i), proc_macro2::Span::call_site()))
+            let field_indices: Vec<syn::Index> = (0..fields_unnamed.unnamed.len())
+                .map(syn::Index::from)
                 .collect();
-            let field_accessors = field_names
+            let field_accessors = field_indices
                 .iter()
-                .map(|ident| quote! { self.#ident.spore_print() });
+                .map(|index| quote! { self.#index.spore_print() });
 
             quote! {
                 vec![
@@ -90,15 +130,18 @@ fn impl_spore_print_for_struct(
         Fields::Unit => quote! { String::new() },
     };
 
+    // For unnamed (tuple) structs, format without named fields.
+    let format_string = match &data_struct.fields {
+        Fields::Named(_) => quote! { format!("{} {{ {} }}", stringify!(#name), fields) },
+        Fields::Unnamed(_) => quote! { format!("{}({})", stringify!(#name), fields) },
+        Fields::Unit => quote! { stringify!(#name).to_string() },
+    };
+
     quote! {
         impl #impl_generics spore_print::SporePrint for #name #ty_generics #where_clause {
             fn spore_print(&self) -> String {
-                if #fields_fmt.is_empty() {
-                    stringify!(#name).to_string()
-                } else {
-                    let fields = #fields_fmt;
-                    format!("{} {{ {} }}", stringify!(#name), fields)
-                }
+                let fields = #fields_fmt;
+                #format_string
             }
         }
     }
