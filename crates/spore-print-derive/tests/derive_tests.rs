@@ -113,13 +113,13 @@ fn test_enum_with_unnamed_fields() {
 fn test_mixed_enum_variants() {
     #[derive(SporePrint)]
     enum MixedEnum {
-        UnitVariant,
+        Unit,
         NamedVariant { field1: i32 },
         UnnamedVariant(String),
     }
 
-    let instance = MixedEnum::UnitVariant;
-    assert_eq!(instance.spore_print(), "MixedEnum::UnitVariant");
+    let instance = MixedEnum::Unit;
+    assert_eq!(instance.spore_print(), "MixedEnum::Unit");
 
     let instance = MixedEnum::NamedVariant { field1: 42 };
     assert_eq!(

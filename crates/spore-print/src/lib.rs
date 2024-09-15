@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::ops::Range;
+use std::ops::{Range, RangeInclusive};
 
 /// The `SporePrint` trait provides a method to get a consistent and immutable string representation of a type.
 ///
@@ -193,6 +193,20 @@ where
     }
 }
 
+// Implement `SporePrint` for `RangeInclusive<T>`
+impl<T> SporePrint for RangeInclusive<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        format!(
+            "{}..={}",
+            self.start().spore_print(),
+            self.end().spore_print()
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,6 +295,13 @@ mod tests {
     fn test_range_i32() {
         let range = -5..5;
         assert_eq!(range.spore_print(), "-5..5");
+    }
+
+    /// Tests `SporePrint` implementation for `RangeInclusive<i32>`
+    #[test]
+    fn test_range_char_inclusive() {
+        let range = 'a'..='z';
+        assert_eq!(range.spore_print(), "a..=z");
     }
 
     /// Tests `SporePrint` implementation for `Range<char>`
