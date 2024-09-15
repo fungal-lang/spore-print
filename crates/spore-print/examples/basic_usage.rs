@@ -1,16 +1,18 @@
-use spore_print::SporePrint; // Import the SporePrint trait
-use spore_print_derive::SporePrint; // Import the derive macro
+use spore_print::SporePrint;
+use spore_print_derive::SporePrint;
+use std::ops::Range;
 
-#[derive(SporePrint)] // Derive the SporePrint trait
+/// A struct representing a mushroom with species and cap diameter range.
+#[derive(SporePrint)]
 struct Mushroom {
     species: String,
-    cap_diameter: usize,
+    cap_diameter: Range<usize>,
 }
 
 fn main() {
     let mushroom = Mushroom {
-        species: "Amanita muscaria".to_string(),
-        cap_diameter: 10,
+        species: "Coprinus Comatus".to_string(),
+        cap_diameter: 3..10,
     };
     println!("{}", mushroom.spore_print());
 }
