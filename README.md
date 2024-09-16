@@ -1,6 +1,6 @@
 <div style="display: flex; align-items: center;">
   <img src="assets/sporeprint-logo-dark.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px; display: none;" class="dark-mode-icon">
-  <img src="assets/sporeprint-logo-light.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px; display: none;" class="light-mode-icon">
+  <img src="assets/sporeprint-logo-light.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px; display: block;" class="light-mode-icon">
 
   <h1>SporePrint: A Clear, Immutable Representation for Rust Types</h1>
 </div>
@@ -10,10 +10,8 @@
     .dark-mode-icon {
       display: block !important;
     }
-  }
-  @media (prefers-color-scheme: light) {
     .light-mode-icon {
-      display: block !important;
+      display: none !important;
     }
   }
 </style>
