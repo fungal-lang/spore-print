@@ -1,4 +1,4 @@
-<div style="display: grid; grid-auto-flow: column; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px; justify-content: start;">
+<div style="display: flex; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px;">
   <img src="../../assets/sporeprint-logo.svg" alt="SporePrint Logo" width="64" height="64" style="margin-top: 16px">
   <h1 style="margin: 0; line-height: 1;">spore-print-derive</h1>
 </div>
