@@ -1,9 +1,9 @@
-<div style="display: flex; align-items: center;">
-  <img src="assets/sporeprint-logo.svg" alt="logo" width="64" height="64" style="margin-right: 12px;margin-top: 32px;">
-  <h1>SporePrint: A Clear, Immutable Representation for Rust Types</h1>
+<div style="display: flex; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px;">
+  <img src="assets/sporeprint-logo.svg" alt="SporePrint Logo" width="72" height="72" style="margin-top: 18px">
+  <h1 style="margin: 0; line-height: 1.3;">SporePrint: Immutable Representation for Rust Types</h1>
 </div>
 
-The SporePrint project consists of two crates:
+#### The SporePrint project consists of two crates:
 
 1. **spore-print**: A Rust library for generating consistent and immutable string representations of various types.
 2. **spore-print-derive**: A custom derive macro for the `SporePrint` trait from the `spore-print` crate.
@@ -36,7 +36,7 @@ spore-print-derive = "0.1.1"
 
 For detailed usage instructions, see the individual crate-level README.md files:
 
-* s[pore-print Usage](crates/spore-print/README.md)
+* [spore-print Usage](crates/spore-print/README.md)
 * [spore-print-derive Usage](crates/spore-print-derive/README.md)
 
 ## License
