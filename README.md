@@ -1,7 +1,32 @@
 <div style="display: flex; align-items: center;">
-  <img src="assets/sporeprint-logo.svg" alt="logo" width="64" height="64" style="margin-right: 12px;margin-top: 32px;">
+  <style>
+    .light-mode-icon {
+      display: none;
+    }
+    @media (prefers-color-scheme: dark) {
+      .dark-mode-icon {
+        display: block;
+      }
+      .light-mode-icon {
+        display: none;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .dark-mode-icon {
+        display: none;
+      }
+      .light-mode-icon {
+        display: block;
+      }
+    }
+  </style>
+
+  <img src="assets/sporeprint-logo-dark.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px;" class="dark-mode-icon">
+  <img src="assets/sporeprint-logo-light.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px;" class="light-mode-icon">
+
   <h1>SporePrint: A Clear, Immutable Representation for Rust Types</h1>
 </div>
+
 
 The SporePrint project consists of two crates:
 
@@ -36,7 +61,7 @@ spore-print-derive = "0.1.1"
 
 For detailed usage instructions, see the individual crate-level README.md files:
 
-* s[pore-print Usage](crates/spore-print/README.md)
+* [spore-print Usage](crates/spore-print/README.md)
 * [spore-print-derive Usage](crates/spore-print-derive/README.md)
 
 ## License
