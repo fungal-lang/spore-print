@@ -18,7 +18,6 @@
   }
 </style>
 
-
 The SporePrint project consists of two crates:
 
 1. **spore-print**: A Rust library for generating consistent and immutable string representations of various types.
