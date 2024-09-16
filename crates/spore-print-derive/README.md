@@ -1,30 +1,9 @@
-<div style="display: flex; align-items: center;">
-  <img src="../../assets/sporeprint-logo-dark.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px; display: none;" class="dark-mode-icon">
-  <img src="../../assets/sporeprint-logo-light.svg" alt="logo" width="64" height="64" style="margin-right: 12px; margin-top: 32px; display: block;" class="light-mode-icon">
-
-  <h1>spore-print-derive</h1>
+<div style="display: grid; grid-auto-flow: column; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px; justify-content: start;">
+  <img src="../../assets/sporeprint-logo.svg" alt="SporePrint Logo" width="64" height="64" style="margin-top: 16px">
+  <h1 style="margin: 0; line-height: 1;">spore-print-derive</h1>
 </div>
 
-<style>
-  @media (prefers-color-scheme: dark) {
-    .dark-mode-icon {
-      display: block !important;
-    }
-    .light-mode-icon {
-      display: none !important;
-    }
-  }
-  @media (prefers-color-scheme: light) {
-    .dark-mode-icon {
-      display: none !important;
-    }
-    .light-mode-icon {
-      display: block !important;
-    }
-  }
-</style>
-
-`spore-print-derive` provides a custom derive macro for the `SporePrint` trait from the `spore-print` crate.
+#### `spore-print-derive` provides a custom derive macro for the `SporePrint` trait from the `spore-print` crate.
 
 ## Usage
 
