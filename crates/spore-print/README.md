@@ -41,7 +41,7 @@ spore-print = "0.1.0"
 ## Example
 
 ```rust 
-use spore_print::SporePrint;
+use spore_print::{SporePrint, sprint, sprintln};
 use std::ops::Range;
 
 /// A struct representing a range of numbers.
@@ -57,8 +57,9 @@ impl SporePrint for NumberRange {
 
 fn main() {
     let number_range = NumberRange { range: 3..10 };
-    println!("{}", number_range.spore_print());
-}   println!("{}", mushroom.spore_print());
+    sprint!(number_range); // Prints without a newline
+    sprintln!(number_range); // Prints with a newline
+}
 ```
 
 ## Features

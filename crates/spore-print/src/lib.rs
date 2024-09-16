@@ -1,3 +1,4 @@
+mod macros;
 use std::collections::{HashMap, HashSet};
 use std::ops::{Range, RangeInclusive};
 
@@ -469,3 +470,5 @@ mod tests {
         assert_eq!(reference.spore_print(), "Custom(1)");
     }
 }
+
+

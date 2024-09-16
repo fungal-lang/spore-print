@@ -42,22 +42,24 @@ spore-print-derive = "0.1.0"
 Example
 
 ```rust
-use spore_print::SporePrint;
-use spore_print_derive::SporePrint;
+use spore_print::{SporePrint, sprint, sprintln};
 use std::ops::Range;
 
-#[derive(SporePrint)]
-struct Mushroom {
-    species: String,
-    cap_diameter: Range<usize>,
+/// A struct representing a range of numbers.
+struct NumberRange {
+    range: Range<usize>,
+}
+
+impl SporePrint for NumberRange {
+    fn spore_print(&self) -> String {
+        self.range.spore_print()
+    }
 }
 
 fn main() {
-    let mushroom = Mushroom {
-        species: "Coprinus Comatus".to_string(),
-        cap_diameter: 3..10,
-    };
-    println!("{}", mushroom.spore_print());
+    let number_range = NumberRange { range: 3..10 };
+    sprint!(number_range); // Prints without a newline
+    sprintln!(number_range); // Prints with a newline
 }
 ```
 
