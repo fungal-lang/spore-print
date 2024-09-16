@@ -1,6 +1,6 @@
 <div style="display: flex; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px;">
-  <img src="assets/sporeprint-logo.svg" alt="SporePrint Logo" width="72" height="72" style="margin-top: 16px">
-  <h1 style="margin: 0; line-height: 1;">SporePrint: A Clear, Immutable Representation for Rust Types</h1>
+  <img src="assets/sporeprint-logo.svg" alt="SporePrint Logo" width="72" height="72" style="margin-top: 18px">
+  <h1 style="margin: 0; line-height: 1.3;">SporePrint: Immutable Representation for Rust Types</h1>
 </div>
 
 #### The SporePrint project consists of two crates:

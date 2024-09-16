@@ -1,6 +1,6 @@
 <div style="display: flex; align-items: center; gap: 16px; margin-top: 24px; margin-bottom: 24px;">
-  <img src="../../assets/sporeprint-logo.svg" alt="SporePrint Logo" width="64" height="64" style="margin-top: 16px">
-  <h1 style="margin: 0; line-height: 1;">spore-print-derive</h1>
+  <img src="../../assets/sporeprint-logo.svg" alt="SporePrint Logo" width="64" height="64" style="margin-top: 18px">
+  <h1 style="margin: 0; line-height: 1.3;">spore-print-derive</h1>
 </div>
 
 #### `spore-print-derive` provides a custom derive macro for the `SporePrint` trait from the `spore-print` crate.
