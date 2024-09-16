@@ -470,5 +470,3 @@ mod tests {
         assert_eq!(reference.spore_print(), "Custom(1)");
     }
 }
-
-
