@@ -1,7 +1,6 @@
-use spore_print::SporePrint;
-use std::collections::{HashMap, HashSet};
-
+use spore_print::{sprint, SporePrint};
 use spore_print_derive::SporePrint;
+use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 
 /// Tests nested vectors to ensure the `spore_print` method preserves the original order.
@@ -426,6 +425,7 @@ struct TestStruct {
     field2: String,
 }
 
+/// Tests `TestStruct` to ensure the `spore_print` method correctly represents the struct.
 #[test]
 fn test_struct_spore_print() {
     let instance = TestStruct {
@@ -437,7 +437,7 @@ fn test_struct_spore_print() {
         "TestStruct { field1: 42, field2: hello }"
     );
 }
-
+/// An enum with unit variants.
 #[derive(SporePrint)]
 enum TestEnum {
     Variant1,
@@ -445,19 +445,20 @@ enum TestEnum {
     Variant3 { field: String },
 }
 
+/// Tests `TestEnum` to ensure the `spore_print` method correctly represents the enum.
 #[test]
 fn test_enum_spore_print() {
     let instance1 = TestEnum::Variant1;
-    assert_eq!(instance1.spore_print(), "TestEnum::Variant1");
+    let sprint_value1 = sprint!(instance1);
+    assert_eq!(sprint_value1, "TestEnum::Variant1");
 
     let instance2 = TestEnum::Variant2(42);
-    assert_eq!(instance2.spore_print(), "TestEnum::Variant2(42)");
+    let sprint_value2 = sprint!(instance2);
+    assert_eq!(sprint_value2, "TestEnum::Variant2(42)");
 
     let instance3 = TestEnum::Variant3 {
         field: "hello".to_string(),
     };
-    assert_eq!(
-        instance3.spore_print(),
-        "TestEnum::Variant3 { field: hello }"
-    );
+    let sprint_value3 = sprint!(instance3);
+    assert_eq!(sprint_value3, "TestEnum::Variant3 { field: hello }");
 }

@@ -1,7 +1,7 @@
-/// Prints the formatted string representation of the given arguments using the `SporePrint` trait.
+/// Returns the formatted string representation of the given arguments using the `SporePrint` trait.
 ///
 /// This macro uses the `SporePrint` trait to generate a consistent and immutable string representation
-/// of the provided arguments and prints it to the standard output.
+/// of the provided arguments and returns it as a `String`.
 ///
 /// # Examples
 ///
@@ -9,12 +9,12 @@
 /// use spore_print::sprint;
 ///
 /// let value = 42;
-/// sprint!(value);  // Output: 42
+/// let result = sprint!(value);  // result: "42"
 /// ```
 #[macro_export]
 macro_rules! sprint {
     ($($arg:tt)*) => {
-        print!("{}", spore_print::SporePrint::spore_print(&$($arg)*));
+        spore_print::SporePrint::spore_print(&$($arg)*)
     };
 }
 

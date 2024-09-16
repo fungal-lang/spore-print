@@ -35,7 +35,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spore-print = "0.1.0"
+spore-print = "0.1.1"
 ```
 
 ## Example
