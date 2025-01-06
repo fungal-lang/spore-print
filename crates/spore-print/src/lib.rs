@@ -1,6 +1,8 @@
 mod macros;
 use std::collections::{HashMap, HashSet};
 use std::ops::{Range, RangeInclusive};
+use std::rc::Rc;
+use std::sync::Arc;
 
 /// The `SporePrint` trait provides a method to get a consistent and immutable string representation of a type.
 ///
@@ -81,13 +83,35 @@ where
     V: SporePrint,
 {
     fn spore_print(&self) -> String {
+        format_map(self.iter())
+    }
+}
+
+impl<K, V> SporePrint for phf::Map<K, V>
+where
+    K: SporePrint,
+    V: SporePrint,
+{
+    fn spore_print(&self) -> String {
         let items = self
-            .iter()
+            .entries()
             .map(|(key, value)| format!("{}: {}", key.spore_print(), value.spore_print()))
             .collect::<Vec<_>>();
 
         format!("{{{}}}", items.join(", "))
     }
+}
+
+fn format_map<K, V, I>(iter: I) -> String
+where
+    K: SporePrint,
+    V: SporePrint,
+    I: Iterator<Item = (K, V)>,
+{
+    let items = iter
+        .map(|(key, value)| format!("{}: {}", key.spore_print(), value.spore_print()))
+        .collect::<Vec<_>>();
+    format!("{{{}}}", items.join(", "))
 }
 
 /// Macro to implement `SporePrint` for tuples of varying lengths. We provide implementations up to tuples of size 12,
@@ -208,9 +232,41 @@ where
     }
 }
 
+// Implement `SporePrint` for `Box<T>`
+impl<T> SporePrint for Box<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        self.as_ref().spore_print()
+    }
+}
+
+// Implement `SporePrint` for `Rc<T>`
+impl<T> SporePrint for Rc<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        self.as_ref().spore_print()
+    }
+}
+
+// Implement `SporePrint` for `Arc<T>`
+
+impl<T> SporePrint for Arc<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        self.as_ref().spore_print()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use phf::phf_map;
     use std::collections::{HashMap, HashSet};
     use std::iter::FromIterator;
 
@@ -341,6 +397,23 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
+    /// Tests `SporePrint` implementation for `phf::Map<&str, i32>`
+    #[test]
+    fn test_phf_map() {
+        // Define a `phf::Map`
+        static TEST_MAP: phf::Map<&'static str, i32> = phf_map! {
+            "one" => 1,
+            "two" => 2,
+            "three" => 3,
+        };
+
+        // Expected output as a string
+        let expected_output = "{one: 1, two: 2, three: 3}";
+
+        // Assert the `spore_print` output matches the expected string
+        assert_eq!(TEST_MAP.spore_print(), expected_output);
+    }
+
     /// Tests `SporePrint` implementation for tuples of varying lengths
     #[test]
     fn test_tuples() {
@@ -468,5 +541,32 @@ mod tests {
         let value = Custom(1);
         let reference: &Custom = &value;
         assert_eq!(reference.spore_print(), "Custom(1)");
+    }
+
+    #[test]
+    fn test_box() {
+        let boxed = Box::new(42);
+        assert_eq!(boxed.spore_print(), "42");
+
+        let nested_boxed = Box::new(Box::new("hello"));
+        assert_eq!(nested_boxed.spore_print(), "hello");
+    }
+
+    #[test]
+    fn test_rc() {
+        let rc = Rc::new(42);
+        assert_eq!(rc.spore_print(), "42");
+
+        let nested_rc = Rc::new(Rc::new("hello"));
+        assert_eq!(nested_rc.spore_print(), "hello");
+    }
+
+    #[test]
+    fn test_arc() {
+        let arc = Arc::new(42);
+        assert_eq!(arc.spore_print(), "42");
+
+        let nested_arc = Arc::new(Arc::new("hello"));
+        assert_eq!(nested_arc.spore_print(), "hello");
     }
 }

@@ -9,5 +9,7 @@ repository = "https://github.com/fungal-lang/spore-print"
 readme = "README.md"
 
 
+[dependencies]
+phf = { version = "0.11", features = ["macros"] }
 [dev-dependencies]
 spore-print-derive = { path = "../spore-print-derive" }
