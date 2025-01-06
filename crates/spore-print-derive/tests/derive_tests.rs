@@ -130,3 +130,84 @@ fn test_mixed_enum_variants() {
     let instance = MixedEnum::UnnamedVariant("hello".to_string());
     assert_eq!(instance.spore_print(), "MixedEnum::UnnamedVariant(hello)");
 }
+
+#[derive(SporePrint)]
+struct Outer<T: SporePrint> {
+    inner: T,
+}
+
+#[derive(SporePrint)]
+struct Inner {
+    field: i32,
+}
+
+#[test]
+fn test_nested_generic_struct() {
+    let instance = Outer {
+        inner: Inner { field: 42 },
+    };
+    assert_eq!(
+        instance.spore_print(),
+        "Outer { inner: Inner { field: 42 } }"
+    );
+}
+
+#[derive(SporePrint)]
+struct BorrowedStruct<'a> {
+    field: &'a str,
+}
+
+#[test]
+fn test_struct_with_lifetimes() {
+    let instance = BorrowedStruct { field: "hello" };
+    assert_eq!(instance.spore_print(), "BorrowedStruct { field: hello }");
+}
+
+#[derive(SporePrint)]
+enum EmptyEnum {}
+
+#[test]
+#[should_panic(expected = "Cannot print an instance of an empty enum EmptyEnum")]
+fn test_empty_enum() {
+    // Simulate calling spore_print() on an instance of EmptyEnum
+    let _ = EmptyEnum::spore_print_enum();
+}
+
+#[derive(SporePrint)]
+enum GenericEnum<T: SporePrint> {
+    Variant(T),
+}
+
+#[test]
+fn test_generic_enum() {
+    let instance = GenericEnum::Variant(42);
+    assert_eq!(instance.spore_print(), "GenericEnum::Variant(42)");
+}
+
+#[derive(SporePrint)]
+struct EmptyStruct {}
+
+#[test]
+fn test_empty_struct() {
+    let instance = EmptyStruct {};
+    assert_eq!(instance.spore_print(), "EmptyStruct { }");
+}
+
+#[derive(SporePrint)]
+struct UnusualFields {
+    r#type: i32,
+    field_with_underscore: String,
+}
+
+#[test]
+fn test_unusual_fields() {
+    let instance = UnusualFields {
+        r#type: 1,
+        field_with_underscore: "test".to_string(),
+    };
+
+    assert_eq!(
+        instance.spore_print(),
+        "UnusualFields { type: 1, field_with_underscore: test }"
+    );
+}

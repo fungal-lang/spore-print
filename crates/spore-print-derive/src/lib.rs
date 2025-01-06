@@ -92,8 +92,12 @@ fn impl_spore_print_for_struct(
     data_struct: &syn::DataStruct,
 ) -> proc_macro2::TokenStream {
     let fields_fmt = match &data_struct.fields {
+        Fields::Named(fields_named) if fields_named.named.is_empty() => {
+            // Handle empty named structs explicitly
+            quote! { String::new() }
+        }
         Fields::Named(fields_named) => {
-            let field_names: Vec<syn::Ident> = fields_named
+            let field_names: Vec<_> = fields_named
                 .named
                 .iter()
                 .map(|f| f.ident.clone().unwrap())
@@ -101,7 +105,9 @@ fn impl_spore_print_for_struct(
             let field_accessors = field_names
                 .iter()
                 .map(|ident| quote! { self.#ident.spore_print() });
-            let field_strings = field_names.iter().map(|ident| ident.to_string());
+            let field_strings = field_names
+                .iter()
+                .map(|ident| ident.to_string().trim_start_matches("r#").to_string());
 
             quote! {
                 vec![
@@ -110,6 +116,9 @@ fn impl_spore_print_for_struct(
                     ),*
                 ].join(", ")
             }
+        }
+        Fields::Unnamed(fields_unnamed) if fields_unnamed.unnamed.is_empty() => {
+            quote! { String::new() }
         }
         Fields::Unnamed(fields_unnamed) => {
             let field_indices: Vec<syn::Index> = (0..fields_unnamed.unnamed.len())
@@ -127,11 +136,16 @@ fn impl_spore_print_for_struct(
                 ].join(", ")
             }
         }
-        Fields::Unit => quote! { String::new() },
+        Fields::Unit => {
+            quote! { String::new() }
+        }
     };
 
-    // For unnamed (tuple) structs, format without named fields.
     let format_string = match &data_struct.fields {
+        Fields::Named(fields_named) if fields_named.named.is_empty() => {
+            // Special case for empty named structs
+            quote! { format!("{} {{ }}", stringify!(#name)) }
+        }
         Fields::Named(_) => quote! { format!("{} {{ {} }}", stringify!(#name), fields) },
         Fields::Unnamed(_) => quote! { format!("{}({})", stringify!(#name), fields) },
         Fields::Unit => quote! { stringify!(#name).to_string() },
@@ -159,7 +173,13 @@ fn impl_spore_print_for_enum(
         return quote! {
             impl #impl_generics spore_print::SporePrint for #name #ty_generics #where_clause {
                 fn spore_print(&self) -> String {
-                    panic!("Cannot print an instance of an empty enum {}", stringify!(#name))
+                    panic!("Cannot print an instance of an empty enum {}", stringify!(#name));
+                }
+            }
+
+            impl #impl_generics #name #ty_generics #where_clause {
+                pub fn spore_print_enum() -> String {
+                    panic!("Cannot print an instance of an empty enum {}", stringify!(#name));
                 }
             }
         };
