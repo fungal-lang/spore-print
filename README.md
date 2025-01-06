@@ -41,7 +41,7 @@ For detailed usage instructions, see the individual crate-level README.md files:
 
 ## License
 
-This project is licensed under the GPL-3 license.
+This project is licensed under the MIT license.
 
 ## Contribution
 

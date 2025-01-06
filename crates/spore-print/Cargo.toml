@@ -4,7 +4,7 @@ version = "0.1.1"
 authors = ["Hakim Jonas Ghoula <hakim@walkthisway.dk>"]
 edition = "2021"
 description = "A Rust library providing a SporePrint trait and derive macro for immutable string representations."
-license = "GPL-3"
+license = "MIT"
 repository = "https://github.com/fungal-lang/spore-print"
 readme = "README.md"
 

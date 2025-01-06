@@ -45,7 +45,7 @@ Derive macro for the SporePrint trait.
 
 ## License
 
-This project is licensed under the GPL-3 license.
+This project is licensed under the MIT license.
 
 This example demonstrates how to use the derive macro from the `spore_print_derive` crate to automatically implement the
 `SporePrint` trait for a custom type.
