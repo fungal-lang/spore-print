@@ -248,7 +248,7 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+mod core_tests {
     use super::*;
     use im::HashSet;
     use phf::phf_map;
