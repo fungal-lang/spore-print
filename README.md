@@ -28,8 +28,8 @@ To use both crates in your project, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spore-print = "0.2.1"
-spore-print-derive = "0.2.1"
+spore-print = "0.2.2"
+spore-print-derive = "0.2.2"
 ```
 
 ## Usage

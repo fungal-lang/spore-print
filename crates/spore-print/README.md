@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spore-print = "0.1.1"
+spore-print = "0.2.2"
 ```
 
 ## Example
