@@ -1,6 +1,6 @@
 [package]
 name = "spore-print-derive"
-version = "0.1.1"
+version = "0.2.2"
 authors = ["Hakim Jonas Ghoula <hakim@walkthisway.dk>"]
 edition = "2021"
 description = "Procedural macro for deriving SporePrint trait."
@@ -16,3 +16,5 @@ syn = { version = "2.0", features = ["full"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 spore-print = { path = "../spore-print" }  # Depends on spore-print for the SporePrint trait
+im = "15.1.0"
+phf = { version = "0.11", features = ["macros"] }

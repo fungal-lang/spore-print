@@ -1,7 +1,6 @@
+use im::{vector, HashSet};
 use spore_print::SporePrint;
-// Import trait from the `spore-print` crate.
 use spore_print_derive::SporePrint;
-// Import the procedural macro from `spore-print-derive` crate.
 
 /// Tests `SporePrint` derivation for unit structs.
 #[test]
@@ -47,7 +46,6 @@ fn test_tuple_struct() {
 fn test_generic_struct() {
     #[derive(SporePrint)]
     struct GenericStruct<T: SporePrint> {
-        // Added trait bound for `SporePrint`
         field: T,
     }
 
@@ -210,4 +208,101 @@ fn test_unusual_fields() {
         instance.spore_print(),
         "UnusualFields { type: 1, field_with_underscore: test }"
     );
+}
+
+/// Tests `SporePrint` derivation for a struct with a slice field.
+#[test]
+fn test_struct_with_slice() {
+    #[derive(SporePrint)]
+    struct SliceStruct {
+        slice_field: &'static [i32],
+    }
+
+    let instance = SliceStruct {
+        slice_field: &[1, 2, 3],
+    };
+    assert_eq!(
+        instance.spore_print(),
+        "SliceStruct { slice_field: [1, 2, 3] }"
+    );
+}
+
+/// Tests `SporePrint` derivation for a struct with an array field.
+#[test]
+fn test_struct_with_array() {
+    #[derive(SporePrint)]
+    struct ArrayStruct {
+        array_field: [i32; 3],
+    }
+
+    let instance = ArrayStruct {
+        array_field: [1, 2, 3],
+    };
+    assert_eq!(
+        instance.spore_print(),
+        "ArrayStruct { array_field: [1, 2, 3] }"
+    );
+}
+
+/// Tests `SporePrint` derivation for a struct with a `Result` field.
+#[test]
+fn test_struct_with_result() {
+    #[derive(SporePrint)]
+    struct ResultStruct {
+        result_field: Result<i32, &'static str>,
+    }
+
+    let instance_ok = ResultStruct {
+        result_field: Ok(42),
+    };
+    assert_eq!(
+        instance_ok.spore_print(),
+        "ResultStruct { result_field: Ok(42) }"
+    );
+
+    let instance_err = ResultStruct {
+        result_field: Err("error"),
+    };
+    assert_eq!(
+        instance_err.spore_print(),
+        "ResultStruct { result_field: Err(error) }"
+    );
+}
+
+/// Tests `SporePrint` derivation for a struct with a `Range` field.
+#[test]
+fn test_struct_with_range() {
+    #[derive(SporePrint)]
+    struct RangeStruct {
+        range_field: std::ops::Range<usize>,
+    }
+
+    let instance = RangeStruct { range_field: 3..10 };
+    assert_eq!(instance.spore_print(), "RangeStruct { range_field: 3..10 }");
+}
+
+/// Tests `SporePrint` derivation for a struct with a `im::HashSet` field.
+#[test]
+fn test_struct_with_hashset() {
+    #[derive(SporePrint)]
+    struct HashSetStruct {
+        hashset_field: HashSet<i32>,
+    }
+
+    let instance = HashSetStruct {
+        hashset_field: HashSet::from(vector![1, 2, 3]),
+    };
+
+    let expected: HashSet<String> =
+        HashSet::from_iter(vector!["1".to_string(), "2".to_string(), "3".to_string()]);
+    let actual: HashSet<String> = HashSet::from_iter(
+        instance
+            .spore_print()
+            .trim_start_matches("HashSetStruct { hashset_field: {")
+            .trim_end_matches("} }")
+            .split(", ")
+            .map(|s| s.trim_matches(|c| c == '[' || c == ']').to_string()),
+    );
+
+    assert_eq!(actual, expected);
 }

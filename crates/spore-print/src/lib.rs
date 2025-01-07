@@ -1,10 +1,8 @@
 mod format;
 mod macros;
 
-use crate::format::{format_collection, format_enum, format_map, format_struct, format_tuple};
-use im::Vector;
-use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use crate::format::{format_collection, format_enum, format_map, format_set, format_tuple};
+use im::{vector, HashMap, HashSet, Vector};
 use std::ops::{Range, RangeInclusive};
 use std::rc::Rc;
 use std::sync::Arc;
@@ -28,6 +26,23 @@ macro_rules! impl_spore_print_for_display {
 impl_spore_print_for_display!(
     u8, u16, u32, u64, usize, i8, i16, i32, i64, isize, f32, f64, String, &str, char, bool
 );
+
+// Implement `SporePrint` for `Struct<T>`
+impl<T> SporePrint for std::marker::PhantomData<T> {
+    fn spore_print(&self) -> String {
+        "PhantomData".to_string()
+    }
+}
+
+// macro_rules! impl_spore_print_for_struct {
+//     ($name:ident, $fields:ident) => {
+//         impl SporePrint for $name {
+//             fn spore_print(&self) -> String {
+//                 format_struct(stringify!($name), vector![$(self.$fields.spore_print()),*])
+//             }
+//         }
+//     };
+// }
 
 // Implement `SporePrint` for `Option<T>`
 impl<T> SporePrint for Option<T>
@@ -62,28 +77,18 @@ where
     format_collection(items.into_iter())
 }
 
-// Macro for common collections
-macro_rules! impl_spore_print_for_collections {
-    ($($t:ty),*) => {
-        $(
-            impl<T> SporePrint for $t
-            where
-                T: SporePrint,
-            {
-                fn spore_print(&self) -> String {
-                    spore_print_collection(self)
-                }
-            }
-        )*
-    };
+impl<T> SporePrint for HashSet<T>
+where
+    T: SporePrint + Clone, // Ensure T is Clone
+{
+    fn spore_print(&self) -> String {
+        format_set(self.iter().cloned())
+    }
 }
 
-impl_spore_print_for_collections!(HashSet<T>);
-
-// Implement `SporePrint` for `HashMap<K, V>`
 impl<K, V> SporePrint for HashMap<K, V>
 where
-    K: SporePrint + Ord,
+    K: SporePrint,
     V: SporePrint,
 {
     fn spore_print(&self) -> String {
@@ -92,11 +97,8 @@ where
         } else {
             let entries = self
                 .iter()
-                .map(|(key, value)| (key.spore_print(), value.spore_print()))
-                .sorted_by(|a, b| a.0.cmp(&b.0)) // Sort for deterministic output
-                .collect::<Vector<_>>();
-
-            format_map(entries.into_iter())
+                .map(|(key, value)| (key.spore_print(), value.spore_print()));
+            format_map(entries)
         }
     }
 }
@@ -120,7 +122,7 @@ macro_rules! impl_spore_print_for_tuples {
             fn spore_print(&self) -> String {
                 #[allow(non_snake_case)]
                 let ($($T,)+) = self;
-                format_tuple(Vector::from(vec![$($T.spore_print()),+]))
+                format_tuple(Vector::from(vector![$($T.spore_print()),+]))
             }
         }
     };
@@ -177,8 +179,8 @@ where
 {
     fn spore_print(&self) -> String {
         match self {
-            Ok(value) => format_enum("", "Ok", Vector::from(vec![value.spore_print()])),
-            Err(err) => format_enum("", "Err", Vector::from(vec![err.spore_print()])),
+            Ok(value) => format_enum("", "Ok", vector![value.spore_print()]),
+            Err(err) => format_enum("", "Err", vector![err.spore_print()]),
         }
     }
 }
@@ -248,8 +250,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use im::HashSet;
     use phf::phf_map;
-    use std::collections::{HashMap, HashSet};
+    use std::fmt::Debug;
     use std::iter::FromIterator;
 
     /// Tests `SporePrint` implementation for `String`
@@ -345,23 +348,60 @@ mod tests {
 
     /// Tests `SporePrint` implementation for vector of strings
     #[test]
-    fn test_vec_of_strings() {
-        let vec = vec!["one".to_string(), "two".to_string(), "three".to_string()];
-        assert_eq!(vec.as_slice().spore_print(), "[one, two, three]");
+    fn test_vector_of_strings() {
+        let vector = vector!["one".to_string(), "two".to_string(), "three".to_string()];
+        assert_eq!(vector.spore_print(), "[one, two, three]");
     }
 
     /// Tests `SporePrint` implementation for `HashSet<i32>`
     #[test]
-    fn test_hashset() {
-        let set: HashSet<i32> = HashSet::from([1, 2]);
-        let expected: HashSet<String> = HashSet::from_iter(vec!["1".to_string(), "2".to_string()]);
-        let actual: HashSet<String> = HashSet::from_iter(
-            set.spore_print()
-                .trim_matches(|c| c == '[' || c == ']')
-                .split(", ")
-                .map(|s| s.to_string()),
+    fn test_im_hashset() {
+        let set: HashSet<i32> = HashSet::from_iter(vector![1, 2, 3]);
+        let actual: HashSet<String> = set
+            .spore_print()
+            .trim_start_matches("{")
+            .trim_end_matches("}")
+            .split(", ")
+            .map(|s| s.to_string())
+            .collect();
+        let expected: HashSet<String> =
+            HashSet::from_iter(vector!["1".to_string(), "2".to_string(), "3".to_string()]);
+        assert_eq!(
+            actual, expected,
+            "Serialized HashSet does not match expected values."
         );
-        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_nested_hashset() {
+        use im::HashSet;
+
+        // Create inner HashSets
+        let inner1: HashSet<String> =
+            HashSet::from_iter(vector!["1".to_string(), "2".to_string(), "3".to_string()]);
+        let inner2: HashSet<String> =
+            HashSet::from_iter(vector!["4".to_string(), "5".to_string(), "6".to_string()]);
+
+        // Create the outer HashSet containing the inner HashSets
+        let nested_set: HashSet<HashSet<String>> =
+            HashSet::from_iter(vector![inner1.clone(), inner2.clone()]);
+
+        // Expected serialized output
+        let actual: HashSet<String> = nested_set
+            .spore_print()
+            .trim_start_matches("{")
+            .trim_end_matches("}")
+            .split("}, {")
+            .map(|s| format!("{{{}}}", s))
+            .collect();
+        let expected: HashSet<String> =
+            HashSet::from_iter(vector![inner1.spore_print(), inner2.spore_print()]);
+
+        // Assert that the serialization matches the expected output
+        assert_eq!(
+            actual, expected,
+            "Serialized nested HashSet does not match expected values."
+        );
     }
 
     /// Tests `SporePrint` implementation for `phf::Map<&str, i32>`
@@ -382,29 +422,29 @@ mod tests {
     }
 
     /// Tests `SporePrint` implementation for tuples of varying lengths
-    // #[test]
-    // fn test_tuples() {
-    //     let tuple_2 = (42, "hello");
-    //     assert_eq!(tuple_2.spore_print(), "(42, hello)");
-    //
-    //     let tuple_3 = (42, "hello", Some(std::f64::consts::PI));
-    //     assert_eq!(
-    //         tuple_3.spore_print(),
-    //         "(42, hello, Some(3.141592653589793))"
-    //     );
-    //
-    //     let tuple_4 = (42, "hello", std::f64::consts::PI, true);
-    //     assert_eq!(
-    //         tuple_4.spore_print(),
-    //         "(42, hello, 3.141592653589793, true)"
-    //     );
-    //
-    //     let tuple_nested = ((1, 2), ("a", "b"));
-    //     assert_eq!(tuple_nested.spore_print(), "((1, 2), (a, b))");
-    //
-    //     let tuple_complex = (42, "hello", vec![1, 2, 3]);
-    //     assert_eq!(tuple_complex.spore_print(), "(42, hello, [1, 2, 3])");
-    // }
+    #[test]
+    fn test_tuples() {
+        let tuple_2 = (42, "hello");
+        assert_eq!(tuple_2.spore_print(), "(42, hello)");
+
+        let tuple_3 = (42, "hello", Some(std::f64::consts::PI));
+        assert_eq!(
+            tuple_3.spore_print(),
+            "(42, hello, Some(3.141592653589793))"
+        );
+
+        let tuple_4 = (42, "hello", std::f64::consts::PI, true);
+        assert_eq!(
+            tuple_4.spore_print(),
+            "(42, hello, 3.141592653589793, true)"
+        );
+
+        let tuple_nested = ((1, 2), ("a", "b"));
+        assert_eq!(tuple_nested.spore_print(), "((1, 2), (a, b))");
+
+        let tuple_complex = (42, "hello", vector![1, 2, 3]);
+        assert_eq!(tuple_complex.spore_print(), "(42, hello, [1, 2, 3])");
+    }
 
     /// Tests `SporePrint` implementation for an empty tuple `()`
     #[test]
@@ -445,7 +485,7 @@ mod tests {
     /// Tests `SporePrint` implementation for a tuple with mixed types
     #[test]
     fn test_tuple_complex() {
-        let vector = Vector::from(vec![1, 2, 3]);
+        let vector = vector![1, 2, 3];
         let tuple_complex = (42, "hello", vector);
         assert_eq!(tuple_complex.spore_print(), "(42, hello, [1, 2, 3])");
     }
@@ -474,8 +514,8 @@ mod tests {
         let reference: &String = &value;
         assert_eq!(reference.spore_print(), "hello");
 
-        let value = vec![1, 2, 3];
-        let reference: &[i32] = &value;
+        let value = vector![1, 2, 3];
+        let reference: &Vector<i32> = &value;
         assert_eq!(reference.spore_print(), "[1, 2, 3]");
 
         let value = Some(42);
@@ -536,14 +576,10 @@ mod tests {
         use crate::format::format_tuple;
         use im::Vector;
 
-        let items = Vector::from(vec![
-            "42".to_string(),
-            "hello".to_string(),
-            "true".to_string(),
-        ]);
+        let items = vector!["42".to_string(), "hello".to_string(), "true".to_string(),];
         assert_eq!(format_tuple(items), "(42, hello, true)");
 
-        let single_item = Vector::from(vec!["42".to_string()]);
+        let single_item = vector!["42".to_string()];
         assert_eq!(format_tuple(single_item), "(42)");
 
         let empty = Vector::<String>::new();
@@ -555,11 +591,8 @@ mod tests {
         use crate::format::format_struct;
         use im::Vector;
 
-        let fields = Vector::from(vec!["field1: 42".to_string(), "field2: hello".to_string()]);
-        assert_eq!(
-            format_struct("MyStruct", fields.clone()),
-            "MyStruct { field1: 42, field2: hello }"
-        );
+        let fields = vector!["42".to_string(), "hello".to_string()];
+        assert_eq!(format_struct("MyStruct", fields), "MyStruct { 42, hello }");
 
         let no_fields = Vector::<String>::new();
         assert_eq!(format_struct("EmptyStruct", no_fields), "EmptyStruct { }");
@@ -570,7 +603,7 @@ mod tests {
         use crate::format::format_enum;
         use im::Vector;
 
-        let fields = Vector::from(vec!["42".to_string(), "hello".to_string()]);
+        let fields = vector!["42".to_string(), "hello".to_string()];
         assert_eq!(
             format_enum("MyEnum", "MyVariant", fields),
             "MyEnum::MyVariant(42, hello)"
@@ -587,10 +620,10 @@ mod tests {
     fn test_format_collection() {
         use crate::format::format_collection;
 
-        let items = vec!["42".to_string(), "hello".to_string(), "true".to_string()];
+        let items = ["42".to_string(), "hello".to_string(), "true".to_string()];
         assert_eq!(format_collection(items.iter()), "[42, hello, true]");
 
-        let empty: Vec<String> = vec![];
+        let empty: Vector<String> = Vector::new();
         assert_eq!(format_collection(empty.iter()), "[]");
     }
 
@@ -604,14 +637,13 @@ mod tests {
 
     #[test]
     fn test_empty_hashmap() {
-        let empty_map: HashMap<&str, i32> = HashMap::new();
+        let empty_map: HashMap<i32, i32> = HashMap::new();
         assert_eq!(empty_map.spore_print(), "{}");
     }
-
     #[test]
     fn test_empty_hashset() {
         let empty_set: HashSet<i32> = HashSet::new();
-        assert_eq!(empty_set.spore_print(), "[]");
+        assert_eq!(empty_set.spore_print(), "{}");
     }
 
     #[test]
@@ -623,52 +655,127 @@ mod tests {
         assert!(f32::NAN.spore_print().contains("NaN"));
     }
 
-    #[test]
-    fn test_nested_hashmap() {
-        let nested_map: HashMap<&str, HashMap<&str, i32>> = HashMap::from([
-            ("outer1", HashMap::from([("inner1", 1), ("inner2", 2)])),
-            ("outer2", HashMap::from([("inner3", 3)])),
-        ]);
+    pub fn assert_hashset_eq<T>(left: &HashSet<T>, right: &HashSet<T>)
+    where
+        T: Eq + std::hash::Hash + Debug,
+    {
+        assert_eq!(
+            left, right,
+            "HashSets are not equal: left = {:?}, right = {:?}",
+            left, right
+        );
+    }
 
-        let spore_print_output = nested_map.spore_print();
+    #[cfg(test)]
+    mod tests {
+        use super::*;
 
-        // Expected substrings
-        let mut expected_substrings = vec!["outer1: {inner1: 1, inner2: 2}", "outer2: {inner3: 3}"];
-        expected_substrings.sort();
+        #[test]
+        fn test_assert_hashset_eq() {
+            let set1: HashSet<i32> = [1, 2, 3].iter().cloned().collect();
+            let set2: HashSet<i32> = [3, 2, 1].iter().cloned().collect();
+            assert_hashset_eq(&set1, &set2);
+        }
 
-        // Check that each substring is present
-        for substring in expected_substrings {
-            assert!(
-                spore_print_output.contains(substring),
-                "Missing expected substring: {}",
-                substring
-            );
+        #[test]
+        #[should_panic]
+        fn test_assert_hashset_eq_fail() {
+            let set1: HashSet<i32> = [1, 2, 3].iter().cloned().collect();
+            let set2: HashSet<i32> = [4, 5, 6].iter().cloned().collect();
+            assert_hashset_eq(&set1, &set2);
         }
     }
-
     #[test]
-    fn test_nested_hashset() {
-        let nested_set = vec![
-            vec![1, 2].into_iter().collect::<HashSet<_>>(),
-            vec![3, 4].into_iter().collect::<HashSet<_>>(),
-        ];
-        let serialized_sets: Vec<String> = nested_set
-            .iter()
-            .map(|set| {
-                let mut vec: Vec<_> = set.iter().collect();
-                vec.sort();
-                format!(
-                    "[{}]",
-                    vec.iter()
-                        .map(|x| x.spore_print())
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            })
+    fn test_non_empty_hashmap() {
+        let map: HashMap<i32, String> = HashMap::from_iter(vector![
+            (1, "one".to_string()),
+            (2, "two".to_string()),
+            (3, "three".to_string()),
+        ]);
+
+        let binding = map.spore_print();
+        let result: Vector<_> = binding
+            .trim_matches(|c| c == '{' || c == '}')
+            .split(", ")
             .collect();
-        assert_eq!(serialized_sets.as_slice().spore_print(), "[[1, 2], [3, 4]]");
+        let expected = vector!["1: one", "2: two", "3: three"];
+
+        assert!(result.len() == expected.len() && result.iter().all(|e| expected.contains(e)));
     }
 
+    #[test]
+    fn test_nested_hashmap() {
+        let inner_map: HashMap<i32, String> =
+            HashMap::from_iter(vector![(1, "one".to_string()), (2, "two".to_string())]);
+
+        let outer_map: HashMap<i32, HashMap<i32, String>> =
+            HashMap::from_iter(vector![(1, inner_map.clone()), (2, inner_map.clone())]);
+
+        let result: Vector<_> = outer_map
+            .spore_print()
+            .trim_matches(|c| c == '{' || c == '}')
+            .split("}, ")
+            .map(|s| {
+                if s.ends_with('}') {
+                    s.to_string()
+                } else {
+                    format!("{}}}", s)
+                }
+            })
+            .collect();
+
+        let expected_variants = vector![
+            vector![
+                "1: {1: one, 2: two}".to_string(),
+                "2: {1: one, 2: two}".to_string()
+            ],
+            vector![
+                "1: {1: one, 2: two}".to_string(),
+                "2: {2: two, 1: one}".to_string()
+            ],
+            vector![
+                "1: {2: two, 1: one}".to_string(),
+                "2: {1: one, 2: two}".to_string()
+            ],
+            vector![
+                "1: {2: two, 1: one}".to_string(),
+                "2: {2: two, 1: one}".to_string()
+            ],
+            vector![
+                "2: {1: one, 2: two}".to_string(),
+                "1: {1: one, 2: two}".to_string()
+            ],
+            vector![
+                "2: {1: one, 2: two}".to_string(),
+                "1: {2: two, 1: one}".to_string()
+            ],
+            vector![
+                "2: {2: two, 1: one}".to_string(),
+                "1: {1: one, 2: two}".to_string()
+            ],
+            vector![
+                "2: {2: two, 1: one}".to_string(),
+                "1: {2: two, 1: one}".to_string()
+            ],
+        ];
+
+        assert!(expected_variants.iter().any(|expected| result == *expected));
+    }
+
+    #[test]
+    fn test_hashmap_with_different_types() {
+        let map: HashMap<&str, i32> =
+            HashMap::from_iter(vector![("one", 1), ("two", 2), ("three", 3)]);
+
+        let binding = map.spore_print();
+        let result: Vector<_> = binding
+            .trim_matches(|c| c == '{' || c == '}')
+            .split(", ")
+            .collect();
+        let expected = vector!["one: 1", "two: 2", "three: 3"];
+
+        assert!(result.len() == expected.len() && result.iter().all(|e| expected.contains(e)));
+    }
     #[test]
     fn test_unicode_strings() {
         let unicode_str = "こんにちは";

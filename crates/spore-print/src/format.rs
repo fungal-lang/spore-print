@@ -20,6 +20,12 @@ pub fn format_collection<T: SporePrint>(items: impl Iterator<Item = T>) -> Strin
         .pipe(|v| format!("[{}]", join_items(v.into_iter(), ", ")))
 }
 
+/// Formats a set as `{item1, item2, ...}`.
+pub fn format_set<T: SporePrint>(items: impl Iterator<Item = T>) -> String {
+    let serialized_items: Vector<String> = items.map(|item| item.spore_print()).collect();
+    format!("{{{}}}", join_items(serialized_items.into_iter(), ", "))
+}
+
 /// Formats a map as `{key1: value1, key2: value2, ...}`.
 pub fn format_map<K: SporePrint, V: SporePrint>(entries: impl Iterator<Item = (K, V)>) -> String {
     entries
@@ -34,6 +40,7 @@ pub fn format_tuple(items: Vector<String>) -> String {
 }
 
 /// Formats a struct as `StructName { field1: value1, field2: value2, ... }`.
+#[allow(dead_code)]
 pub fn format_struct(name: &str, fields: Vector<String>) -> String {
     join_items(fields.into_iter(), ", ").pipe(|formatted| {
         if formatted.is_empty() {
@@ -46,7 +53,7 @@ pub fn format_struct(name: &str, fields: Vector<String>) -> String {
 
 /// Formats an enum variant as `EnumName::VariantName(field1, field2, ...)`.
 pub fn format_enum(name: &str, variant: &str, fields: Vector<String>) -> String {
-    let formatted = fields.into_iter().collect::<Vec<_>>().join(", ");
+    let formatted = join_items(fields.into_iter(), ", ");
     match (name, formatted.is_empty()) {
         ("", true) => variant.to_string(),
         ("", false) => format!("{}({})", variant, formatted),

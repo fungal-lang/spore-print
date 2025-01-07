@@ -1,7 +1,7 @@
+use im::HashSet;
 use im::{vector, Vector};
 use spore_print::{sprint, SporePrint};
 use spore_print_derive::SporePrint;
-use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 
 /// Tests nested vectors to ensure the `spore_print` method preserves the original order.
@@ -38,10 +38,11 @@ fn test_deeply_nested_immutable_vector_option() {
 /// Tests `HashMap` with `SporePrint` to ensure the `spore_print` method correctly represents the map.
 #[test]
 fn test_hashmap_membership() {
+    use im::HashMap;
     let map: HashMap<&str, i32> = [("key1", 1), ("key2", 2)].iter().cloned().collect();
 
     let expected: HashSet<String> =
-        HashSet::from_iter(vec!["key1: 1".to_string(), "key2: 2".to_string()]);
+        HashSet::from_iter(vector!["key1: 1".to_string(), "key2: 2".to_string()]);
     let actual: HashSet<String> = HashSet::from_iter(
         map.spore_print()
             .trim_matches(|c| c == '{' || c == '}')
@@ -87,20 +88,20 @@ fn test_immutable_vector_of_strings() {
     assert_eq!(vector.spore_print(), "[one, two, three]");
 }
 
-/// Tests `HashSet` with `SporePrint` to ensure the `spore_print` method correctly represents the set.
 #[test]
 fn test_hashset() {
-    let set: HashSet<i32> = HashSet::from([1, 2]);
-    let expected: HashSet<String> = HashSet::from_iter(vec!["1".to_string(), "2".to_string()]);
+    let hashset: HashSet<i32> = HashSet::from(vector![1, 2, 3]);
+    let expected: HashSet<String> =
+        HashSet::from_iter(vector!["1".to_string(), "2".to_string(), "3".to_string()]);
     let actual: HashSet<String> = HashSet::from_iter(
-        set.spore_print()
-            .trim_matches(|c| c == '[' || c == ']')
+        hashset
+            .spore_print()
+            .trim_matches(|c| c == '{' || c == '}')
             .split(", ")
             .map(|s| s.to_string()),
     );
     assert_eq!(actual, expected);
 }
-
 /// A struct with primitive types.
 #[derive(SporePrint)]
 struct PrimitiveStruct {
@@ -396,30 +397,31 @@ fn test_vec_struct() {
     );
 }
 
-/// A struct with a `HashSet` field.
-#[derive(SporePrint)]
-struct HashSetStruct {
-    set_field: HashSet<i32>,
-}
-
 /// Tests `HashSetStruct` to ensure the `spore_print` method correctly represents the struct.
 #[test]
-fn test_hashset_struct() {
-    let test_struct = HashSetStruct {
-        set_field: HashSet::from([1, 2]),
+fn test_struct_with_hashset() {
+    #[derive(SporePrint)]
+    struct HashSetStruct {
+        hashset_field: HashSet<i32>,
+    }
+
+    let instance = HashSetStruct {
+        hashset_field: HashSet::from(vector![1, 2, 3]),
     };
-    let expected: HashSet<String> = HashSet::from_iter(vec!["1".to_string(), "2".to_string()]);
+
+    let expected: HashSet<String> =
+        HashSet::from_iter(vector!["1".to_string(), "2".to_string(), "3".to_string()]);
     let actual: HashSet<String> = HashSet::from_iter(
-        test_struct
+        instance
             .spore_print()
-            .trim_start_matches("HashSetStruct { set_field: [")
-            .trim_end_matches("] }")
+            .trim_start_matches("HashSetStruct { hashset_field: {")
+            .trim_end_matches("} }")
             .split(", ")
-            .map(|s| s.trim().to_string()),
+            .map(|s| s.to_string()),
     );
+
     assert_eq!(actual, expected);
 }
-
 #[derive(SporePrint)]
 struct TestStruct {
     field1: i32,
