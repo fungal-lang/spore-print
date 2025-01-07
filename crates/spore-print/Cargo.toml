@@ -10,6 +10,8 @@ readme = "README.md"
 
 
 [dependencies]
+im = "15.1.0"
 phf = { version = "0.11", features = ["macros"] }
+itertools = "0.14.0"
 [dev-dependencies]
 spore-print-derive = { path = "../spore-print-derive" }

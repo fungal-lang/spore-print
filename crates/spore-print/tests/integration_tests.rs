@@ -1,3 +1,4 @@
+use im::{vector, Vector};
 use spore_print::{sprint, SporePrint};
 use spore_print_derive::SporePrint;
 use std::collections::{HashMap, HashSet};
@@ -5,15 +6,18 @@ use std::ops::Range;
 
 /// Tests nested vectors to ensure the `spore_print` method preserves the original order.
 #[test]
-fn test_nested_vecs() {
-    let nested_vec = vec![vec![1, 2], vec![3, 4]];
-    assert_eq!(nested_vec.spore_print(), "[[1, 2], [3, 4]]");
+fn test_nested_immutable_vectors() {
+    let nested_vector = vector![vector![1, 2, 3], vector![4, 5, 6], vector![7, 8, 9]];
+    assert_eq!(
+        nested_vector.spore_print(),
+        "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]"
+    );
 }
 
 /// Tests complex options to ensure the `spore_print` method matches the deeply nested structure.
 #[test]
 fn test_complex_option() {
-    let complex_option: Option<Vec<Option<i32>>> = Some(vec![Some(1), None, Some(3)]);
+    let complex_option: Option<Vector<Option<i32>>> = Some(vector![Some(1), None, Some(3)]);
     assert_eq!(
         complex_option.spore_print(),
         "Some([Some(1), None, Some(3)])"
@@ -22,15 +26,12 @@ fn test_complex_option() {
 
 /// Tests deeply nested vectors of options to ensure the `spore_print` method matches the structure.
 #[test]
-fn test_deeply_nested_vec_option() {
-    let nested_vec = vec![
-        Some(vec![Some(1), None, Some(3)]),
-        None,
-        Some(vec![None, Some(4)]),
-    ];
+fn test_deeply_nested_immutable_vector_option() {
+    let nested_vector_option: Option<Vector<Option<Vector<Option<i32>>>>> =
+        Some(vector![Some(vector![Some(1), None, Some(3)])]);
     assert_eq!(
-        nested_vec.spore_print(),
-        "[Some([Some(1), None, Some(3)]), None, Some([None, Some(4)])]"
+        nested_vector_option.spore_print(),
+        "Some([Some([Some(1), None, Some(3)])])"
     );
 }
 
@@ -81,9 +82,9 @@ fn test_tuple() {
 
 /// Tests vector of strings with `SporePrint` to ensure the `spore_print` method correctly represents the vector.
 #[test]
-fn test_vec_of_strings() {
-    let vec = vec!["one".to_string(), "two".to_string(), "three".to_string()];
-    assert_eq!(vec.spore_print(), "[one, two, three]");
+fn test_immutable_vector_of_strings() {
+    let vector = vector!["one".to_string(), "two".to_string(), "three".to_string()];
+    assert_eq!(vector.spore_print(), "[one, two, three]");
 }
 
 /// Tests `HashSet` with `SporePrint` to ensure the `spore_print` method correctly represents the set.
@@ -126,7 +127,7 @@ fn test_primitive_struct() {
 #[derive(SporePrint)]
 struct ComplexStruct<'a> {
     ref_field: &'a str,
-    vec_field: Vec<i32>,
+    vec_field: Vector<i32>,
     option_field: Option<String>,
 }
 
@@ -135,7 +136,7 @@ struct ComplexStruct<'a> {
 fn test_complex_struct() {
     let test_struct: ComplexStruct = ComplexStruct {
         ref_field: "Hello",
-        vec_field: vec![1i32, 2, 3],
+        vec_field: vector![1i32, 2, 3],
         option_field: Some("World".to_string()),
     };
     assert_eq!(
@@ -380,14 +381,14 @@ fn test_tuple_struct() {
 /// A struct with a vector field.
 #[derive(SporePrint)]
 struct VecStruct {
-    vec_field: Vec<String>,
+    vec_field: Vector<String>,
 }
 
 /// Tests `VecStruct` to ensure the `spore_print` method correctly represents the struct.
 #[test]
 fn test_vec_struct() {
     let test_struct = VecStruct {
-        vec_field: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+        vec_field: vector!["one".to_string(), "two".to_string(), "three".to_string()],
     };
     assert_eq!(
         test_struct.spore_print(),
