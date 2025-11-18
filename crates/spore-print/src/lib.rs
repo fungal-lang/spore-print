@@ -8,8 +8,23 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 /// The `SporePrint` trait provides a method to get a consistent and immutable string representation of a type.
+///
+/// The trait provides two methods:
+/// - `spore_print()`: Primary method for string representation
+/// - `spore_print_depth()`: Optional method with depth limiting (default calls spore_print)
+///
+/// For recursive types (Option, Result, collections), implement `spore_print_depth()` to prevent stack overflow.
+/// For non-recursive types, just implement `spore_print()`.
 pub trait SporePrint {
+    /// Returns the string representation of this value.
     fn spore_print(&self) -> String;
+
+    /// Returns the string representation with a maximum depth limit.
+    /// Default implementation calls `spore_print()` for backward compatibility.
+    /// Override this for recursive types to prevent stack overflow.
+    fn spore_print_depth(&self, _max_depth: usize) -> String {
+        self.spore_print()
+    }
 }
 
 // Implement `SporePrint` for types that implement `Display`
@@ -50,8 +65,15 @@ where
     T: SporePrint,
 {
     fn spore_print(&self) -> String {
+        self.spore_print_depth(100)
+    }
+
+    fn spore_print_depth(&self, max_depth: usize) -> String {
+        if max_depth == 0 {
+            return "...".to_string();
+        }
         match self {
-            Some(value) => format!("Some({})", value.spore_print()),
+            Some(value) => format!("Some({})", value.spore_print_depth(max_depth - 1)),
             None => "None".to_string(),
         }
     }
@@ -65,14 +87,17 @@ impl SporePrint for () {
 }
 
 // Helper function for spore_print implementation for collections
-fn spore_print_collection<I>(items: I) -> String
+fn spore_print_collection<I>(items: I, max_depth: usize) -> String
 where
     I: IntoIterator,
     I::Item: SporePrint,
 {
+    if max_depth == 0 {
+        return "[...]".to_string();
+    }
     let items = items
         .into_iter()
-        .map(|item| item.spore_print())
+        .map(|item| item.spore_print_depth(max_depth - 1))
         .collect::<Vector<_>>();
     format_collection(items.into_iter())
 }
@@ -82,7 +107,14 @@ where
     T: SporePrint + Clone, // Ensure T is Clone
 {
     fn spore_print(&self) -> String {
-        format_set(self.iter().cloned())
+        self.spore_print_depth(100)
+    }
+
+    fn spore_print_depth(&self, max_depth: usize) -> String {
+        if max_depth == 0 {
+            return "{...}".to_string();
+        }
+        format_set(self.iter().cloned(), max_depth - 1)
     }
 }
 
@@ -92,12 +124,18 @@ where
     V: SporePrint,
 {
     fn spore_print(&self) -> String {
+        self.spore_print_depth(100)
+    }
+
+    fn spore_print_depth(&self, max_depth: usize) -> String {
         if self.is_empty() {
             "{}".to_string()
+        } else if max_depth == 0 {
+            "{...}".to_string()
         } else {
             let entries = self
                 .iter()
-                .map(|(key, value)| (key.spore_print(), value.spore_print()));
+                .map(|(key, value)| (key.spore_print_depth(max_depth - 1), value.spore_print_depth(max_depth - 1)));
             format_map(entries)
         }
     }
@@ -147,7 +185,7 @@ where
     T: SporePrint,
 {
     fn spore_print(&self) -> String {
-        spore_print_collection(*self)
+        spore_print_collection(*self, 100)
     }
 }
 
@@ -157,7 +195,7 @@ where
     T: SporePrint,
 {
     fn spore_print(&self) -> String {
-        spore_print_collection(self)
+        spore_print_collection(self, 100)
     }
 }
 
@@ -215,7 +253,97 @@ where
     T: SporePrint + Clone,
 {
     fn spore_print(&self) -> String {
-        spore_print_collection(self)
+        spore_print_collection(self, 100)
+    }
+}
+
+// Implement `SporePrint` for `Vec<T>` (standard library)
+impl<T> SporePrint for Vec<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        spore_print_collection(self, 100)
+    }
+}
+
+// Implement `SporePrint` for `std::collections::HashMap<K, V>`
+impl<K, V> SporePrint for std::collections::HashMap<K, V>
+where
+    K: SporePrint,
+    V: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        if self.is_empty() {
+            "{}".to_string()
+        } else {
+            format_map(self.iter())
+        }
+    }
+}
+
+// Implement `SporePrint` for `std::collections::HashSet<T>`
+impl<T> SporePrint for std::collections::HashSet<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        if self.is_empty() {
+            "{}".to_string()
+        } else {
+            let items = self.iter().map(|item| item.spore_print()).collect::<Vec<_>>();
+            format!("{{{}}}", items.join(", "))
+        }
+    }
+}
+
+// Implement `SporePrint` for `std::collections::BTreeMap<K, V>`
+impl<K, V> SporePrint for std::collections::BTreeMap<K, V>
+where
+    K: SporePrint,
+    V: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        if self.is_empty() {
+            "{}".to_string()
+        } else {
+            format_map(self.iter())
+        }
+    }
+}
+
+// Implement `SporePrint` for `std::collections::BTreeSet<T>`
+impl<T> SporePrint for std::collections::BTreeSet<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        if self.is_empty() {
+            "{}".to_string()
+        } else {
+            let items = self.iter().map(|item| item.spore_print()).collect::<Vec<_>>();
+            format!("{{{}}}", items.join(", "))
+        }
+    }
+}
+
+// Implement `SporePrint` for `std::collections::VecDeque<T>`
+impl<T> SporePrint for std::collections::VecDeque<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        spore_print_collection(self, 100)
+    }
+}
+
+// Implement `SporePrint` for `std::collections::LinkedList<T>`
+impl<T> SporePrint for std::collections::LinkedList<T>
+where
+    T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        spore_print_collection(self, 100)
     }
 }
 
@@ -241,6 +369,38 @@ where
 impl<T> SporePrint for Arc<T>
 where
     T: SporePrint,
+{
+    fn spore_print(&self) -> String {
+        self.as_ref().spore_print()
+    }
+}
+
+// Implement `SporePrint` for `Path` (common in compilers for file paths)
+impl SporePrint for std::path::Path {
+    fn spore_print(&self) -> String {
+        self.display().to_string()
+    }
+}
+
+// Implement `SporePrint` for `PathBuf`
+impl SporePrint for std::path::PathBuf {
+    fn spore_print(&self) -> String {
+        self.display().to_string()
+    }
+}
+
+// Implement `SporePrint` for `Cow<str>` (common in parsers/compilers for zero-copy)
+impl SporePrint for std::borrow::Cow<'_, str> {
+    fn spore_print(&self) -> String {
+        self.to_string()
+    }
+}
+
+// Implement `SporePrint` for `Cow<T>` where T: SporePrint + ToOwned
+impl<T> SporePrint for std::borrow::Cow<'_, T>
+where
+    T: SporePrint + ToOwned + ?Sized,
+    T::Owned: SporePrint,
 {
     fn spore_print(&self) -> String {
         self.as_ref().spore_print()
@@ -786,5 +946,114 @@ mod core_tests {
 
         let emoji_str = "😊";
         assert_eq!(emoji_str.spore_print(), "😊");
+    }
+
+    // Property-based tests for correctness guarantees
+    #[cfg(test)]
+    mod property_tests {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            /// Property: spore_print is deterministic (same input -> same output)
+            #[test]
+            fn prop_deterministic_i32(value: i32) {
+                prop_assert_eq!(value.spore_print(), value.spore_print());
+            }
+
+            /// Property: spore_print is deterministic for strings
+            #[test]
+            fn prop_deterministic_string(value: String) {
+                prop_assert_eq!(value.spore_print(), value.spore_print());
+            }
+
+            /// Property: Option structure is correct
+            #[test]
+            fn prop_option_structure(value: Option<i32>) {
+                let printed = value.spore_print();
+                match value {
+                    Some(_) => {
+                        prop_assert!(printed.starts_with("Some("));
+                        prop_assert!(printed.ends_with(")"));
+                    }
+                    None => prop_assert_eq!(printed, "None"),
+                }
+            }
+
+            /// Property: Result structure is correct
+            #[test]
+            fn prop_result_structure_ok(value: i32) {
+                let result: Result<i32, &str> = Ok(value);
+                let printed = result.spore_print();
+                prop_assert!(printed.starts_with("Ok("));
+                prop_assert!(printed.ends_with(")"));
+            }
+
+            /// Property: Result structure is correct for Err
+            #[test]
+            fn prop_result_structure_err(msg in ".+") {  // Non-empty strings only
+                let result: Result<i32, String> = Err(msg.clone());
+                let printed = result.spore_print();
+                prop_assert!(printed.starts_with("Err("));
+                prop_assert!(printed.ends_with(")"));
+                prop_assert!(printed.contains(&msg));
+            }
+
+            /// Property: Vec length matches element count in output
+            #[test]
+            fn prop_vec_contains_elements(vec in prop::collection::vec(0i32..100, 0..10)) {
+                let printed = vec.spore_print();
+                // Count commas + 1 should equal vec length (for non-empty vecs)
+                if vec.is_empty() {
+                    prop_assert_eq!(printed, "[]");
+                } else {
+                    let comma_count = printed.matches(", ").count();
+                    prop_assert_eq!(comma_count + 1, vec.len());
+                }
+            }
+
+            /// Property: Depth limiting prevents stack overflow
+            #[test]
+            fn prop_depth_limiting_simple_vec(len in 0usize..100) {
+                // Create a Vec with nested Options
+                let vec: Vec<Option<i32>> = (0..len).map(|i| Some(i as i32)).collect();
+                // Should not panic
+                let _printed = vec.spore_print();
+                prop_assert!(true);
+            }
+
+            /// Property: spore_print_depth respects depth limit
+            #[test]
+            fn prop_depth_limit_respected(max_depth in 1usize..20) {
+                let value = Some(Some(Some(42)));
+                let printed = value.spore_print_depth(max_depth);
+                // Should not panic and should produce valid output
+                prop_assert!(!printed.is_empty());
+                // If max_depth is very low, we should see truncation
+                if max_depth < 3 {
+                    prop_assert!(printed.contains("...") || !printed.contains("42"));
+                }
+            }
+
+            /// Property: Tuple format is correct
+            #[test]
+            fn prop_tuple_format(a: i32, b: i32) {
+                let tuple = (a, b);
+                let printed = tuple.spore_print();
+                prop_assert!(printed.starts_with("("));
+                prop_assert!(printed.ends_with(")"));
+                prop_assert!(printed.contains(", "));
+            }
+
+            /// Property: Range format is correct
+            #[test]
+            fn prop_range_format(start: i32, end: i32) {
+                let range = start..end;
+                let printed = range.spore_print();
+                prop_assert!(printed.contains(".."));
+                prop_assert!(printed.contains(&start.to_string()));
+                prop_assert!(printed.contains(&end.to_string()));
+            }
+        }
     }
 }

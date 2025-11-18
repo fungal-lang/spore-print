@@ -21,12 +21,12 @@ macro_rules! sprint {
 /// Prints the formatted string representation of the given arguments using the `SporePrint` trait,
 /// followed by a newline.
 ///
-/// This macro is a wrapper around `sprint!` that adds a newline after printing.
+/// This macro prints the SporePrint representation to stdout with a trailing newline.
 ///
 /// # Examples
 ///
 /// ```
-/// use spore_print::{sprint, sprintln};
+/// use spore_print::sprintln;
 ///
 /// let value = 42;
 /// sprintln!(value);  // Output: 42 (with newline)
@@ -34,7 +34,6 @@ macro_rules! sprint {
 #[macro_export]
 macro_rules! sprintln {
     ($($arg:tt)*) => {
-        sprint!($($arg)*);
-        println!();
+        println!("{}", spore_print::SporePrint::spore_print(&$($arg)*))
     };
 }

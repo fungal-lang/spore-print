@@ -2,14 +2,9 @@ use crate::SporePrint;
 use im::Vector;
 
 /// Helper function to join items with a separator in a functional style.
+/// Uses efficient Vec::join to avoid O(n²) string concatenation.
 pub(crate) fn join_items(items: impl Iterator<Item = String>, separator: &str) -> String {
-    items.fold(String::new(), |acc, item| {
-        if acc.is_empty() {
-            item
-        } else {
-            format!("{}{}{}", acc, separator, item)
-        }
-    })
+    items.collect::<Vec<_>>().join(separator)
 }
 
 /// Formats a collection as `[item1, item2, ...]`.
@@ -21,8 +16,11 @@ pub fn format_collection<T: SporePrint>(items: impl Iterator<Item = T>) -> Strin
 }
 
 /// Formats a set as `{item1, item2, ...}`.
-pub fn format_set<T: SporePrint>(items: impl Iterator<Item = T>) -> String {
-    let serialized_items: Vector<String> = items.map(|item| item.spore_print()).collect();
+pub fn format_set<T: SporePrint>(items: impl Iterator<Item = T>, max_depth: usize) -> String {
+    if max_depth == 0 {
+        return "{...}".to_string();
+    }
+    let serialized_items: Vector<String> = items.map(|item| item.spore_print_depth(max_depth)).collect();
     format!("{{{}}}", join_items(serialized_items.into_iter(), ", "))
 }
 
